@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="no-referrer" />
+  <meta name="color-scheme" content="light dark" />
+  <!-- Restrict execution surface: no remote fetches, external script/style only from same origin -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'; img-src 'self' data:; font-src 'self'; style-src 'self'; script-src 'self'; connect-src 'none'; upgrade-insecure-requests" />
+  <title>CPU SCHEDULING SIMULATOR</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <header class="app-header" role="banner">
+    <div class="brand">
+      <span class="brand-icon" aria-hidden="true">◈</span>
+      <div>
+        <h1>CPU SCHEDULING SIMULATOR</h1>
+        <p class="tagline">CPU, disk scheduling &amp; Banker’s algorithm for OS lab &amp; viva</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button type="button" id="btn-theme" class="btn btn-ghost" aria-label="Toggle dark or light theme" title="Toggle theme">
+        <span class="icon-theme" aria-hidden="true"></span>
+      </button>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Main sections">
+    <button type="button" id="tab-cpu" class="tab active" role="tab" aria-selected="true" aria-controls="panel-cpu" data-tab="cpu">CPU Scheduling</button>
+    <button type="button" id="tab-disk" class="tab" role="tab" aria-selected="false" aria-controls="panel-disk" data-tab="disk">Disk Scheduling</button>
+    <button type="button" id="tab-banker" class="tab" role="tab" aria-selected="false" aria-controls="panel-banker" data-tab="banker">Banker’s Algorithm</button>
+  </nav>
+
+  <main id="main-content" class="main">
+    <!-- CPU Panel -->
+    <section id="panel-cpu" class="panel active" role="tabpanel" aria-labelledby="tab-cpu" tabindex="0">
+      <div class="panel-intro">
+        <h2>CPU scheduling</h2>
+        <p>Enter process data, pick an algorithm, then run or step through the simulation. Inputs are validated and clamped for safe classroom use.</p>
+      </div>
+
+      <div class="grid-2">
+        <article class="card">
+          <h3 class="card-title">
+            <span class="card-icon" aria-hidden="true">⚙</span>
+            Configuration
+          </h3>
+          <form id="form-cpu" class="form" novalidate>
+            <label class="field">
+              <span class="label-text">Algorithm <span class="tooltip-wrap" data-tooltip="FCFS: first come; SJF NP/P: shortest job; Priority NP/P: lower number = higher priority; SRTF: preemptive SJF; RR: time quantum.">ⓘ</span></span>
+              <select id="cpu-algo" name="algo" required>
+                <option value="fcfs">FCFS</option>
+                <option value="sjf-np">SJF (Non-preemptive)</option>
+                <option value="sjf-p">SJF (Preemptive / SRTF)</option>
+                <option value="priority">Priority (non-preemptive)</option>
+                <option value="priority-p">Priority (preemptive)</option>
+                <option value="rr">Round Robin</option>
+              </select>
+            </label>
+            <label class="field">
+              <span class="label-text">Number of processes (1–20)</span>
+              <input type="number" id="cpu-n" name="n" min="1" max="20" value="3" inputmode="numeric" autocomplete="off" />
+            </label>
+            <div id="cpu-quantum-wrap" class="field" hidden>
+              <label class="field">
+                <span class="label-text">Time quantum (Round Robin only)</span>
+                <input
+                  type="number"
+                  id="cpu-quantum"
+                  name="quantum"
+                  min="1"
+                  max="1000"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  placeholder="e.g. 2"
+                  aria-describedby="cpu-quantum-hint"
+                />
+              </label>
+              <p id="cpu-quantum-hint" class="hint field-hint">Shown when Round Robin is selected or ticked in Compare.</p>
+            </div>
+            <div id="cpu-process-fields" class="process-fields" aria-live="polite"></div>
+            <div class="btn-row">
+              <button type="submit" class="btn btn-primary" id="cpu-run">Run simulation</button>
+              <button type="button" class="btn btn-secondary" id="cpu-step">Step</button>
+              <button type="button" class="btn btn-ghost" id="cpu-reset">Reset</button>
+            </div>
+            <p id="cpu-error" class="form-error" role="alert" hidden></p>
+          </form>
+        </article>
+
+        <article class="card">
+          <h3 class="card-title">
+            <span class="card-icon" aria-hidden="true">⇄</span>
+            Compare algorithms
+          </h3>
+          <p class="hint">Select multiple algorithms to compare average TAT and WT on the same workload.</p>
+          <fieldset class="compare-fieldset">
+            <legend class="sr-only">Algorithms to compare</legend>
+            <label class="chk"><input type="checkbox" name="cpu-compare" value="fcfs" /> FCFS</label>
+            <label class="chk"><input type="checkbox" name="cpu-compare" value="sjf-np" /> SJF NP</label>
+            <label class="chk"><input type="checkbox" name="cpu-compare" value="sjf-p" /> SJF P</label>
+            <label class="chk"><input type="checkbox" name="cpu-compare" value="priority" /> Priority NP</label>
+            <label class="chk"><input type="checkbox" name="cpu-compare" value="priority-p" /> Priority P</label>
+            <label class="chk"><input type="checkbox" name="cpu-compare" value="rr" /> RR</label>
+          </fieldset>
+          <button type="button" class="btn btn-secondary" id="cpu-compare-btn">Compare selected</button>
+          <div id="cpu-compare-out" class="compare-out" aria-live="polite"></div>
+        </article>
+      </div>
+
+      <article class="card card-wide">
+        <h3 class="card-title">Gantt chart</h3>
+        <div id="cpu-gantt-wrap" class="gantt-wrap">
+          <div id="cpu-gantt" class="gantt" role="img" aria-label="CPU Gantt chart"></div>
+          <div id="cpu-gantt-axis" class="gantt-axis"></div>
+        </div>
+        <div id="cpu-order-block" class="order-block" aria-live="polite" hidden>
+          <p class="order-line"><strong>CPU execution order</strong> (from Gantt, Idle omitted): <span id="cpu-exec-order"></span></p>
+          <p class="order-line"><strong>Completion order</strong> (by completion time): <span id="cpu-complete-order"></span></p>
+        </div>
+        <p id="cpu-step-hint" class="hint" hidden>Step mode: use Step to advance the highlighted interval.</p>
+      </article>
+
+      <article class="card card-wide">
+        <h3 class="card-title">Results table</h3>
+        <div class="table-scroll">
+          <table class="data-table" id="cpu-table">
+            <thead>
+              <tr>
+                <th scope="col">PID</th>
+                <th scope="col">Arrival</th>
+                <th scope="col">Burst</th>
+                <th scope="col" id="cpu-th-priority" hidden>Priority</th>
+                <th scope="col">Completion</th>
+                <th scope="col">TAT</th>
+                <th scope="col">WT</th>
+              </tr>
+            </thead>
+            <tbody id="cpu-tbody"></tbody>
+          </table>
+        </div>
+        <div class="metrics metrics-stack" id="cpu-metrics"></div>
+      </article>
+
+      <div class="btn-row footer-actions">
+        <button type="button" class="btn btn-ghost" id="cpu-save">Save simulation</button>
+        <button type="button" class="btn btn-ghost" id="cpu-load">Load saved</button>
+        <button type="button" class="btn btn-ghost" id="cpu-export-print">Print / Save as PDF</button>
+      </div>
+    </section>
+
+    <!-- Disk Panel -->
+    <section id="panel-disk" class="panel" role="tabpanel" aria-labelledby="tab-disk" tabindex="0" hidden>
+      <div class="panel-intro">
+        <h2>Disk scheduling</h2>
+        <p>Request queue as comma-separated cylinders. SCAN / C-SCAN use max cylinder and direction.</p>
+      </div>
+
+      <div class="grid-2">
+        <article class="card">
+          <h3 class="card-title">
+            <span class="card-icon" aria-hidden="true">💾</span>
+            Configuration
+          </h3>
+          <form id="form-disk" class="form" novalidate>
+            <label class="field">
+              <span class="label-text">Algorithm</span>
+              <select id="disk-algo" name="algo" required>
+                <option value="fcfs">FCFS</option>
+                <option value="sstf">SSTF</option>
+                <option value="scan">SCAN</option>
+                <option value="cscan">C-SCAN</option>
+                <option value="look">LOOK</option>
+                <option value="clook">C-LOOK</option>
+              </select>
+            </label>
+            <label class="field">
+              <span class="label-text">Request queue (comma-separated, max 50)</span>
+              <input type="text" id="disk-queue" name="queue" value="98,183,37,122,14,124,65,67" maxlength="500" spellcheck="false" autocomplete="off" />
+            </label>
+            <label class="field">
+              <span class="label-text">Initial head (0–9999)</span>
+              <input type="number" id="disk-head" name="head" min="0" max="9999" value="53" inputmode="numeric" autocomplete="off" />
+            </label>
+            <label class="field">
+              <span class="label-text">Max cylinder (SCAN family)</span>
+              <input type="number" id="disk-max" name="maxcyl" min="1" max="10000" value="199" inputmode="numeric" autocomplete="off" />
+            </label>
+            <label class="field">
+              <span class="label-text">Initial direction</span>
+              <select id="disk-dir" name="dir">
+                <option value="right">Right (increasing)</option>
+                <option value="left">Left (decreasing)</option>
+              </select>
+            </label>
+            <div class="btn-row">
+              <button type="submit" class="btn btn-primary" id="disk-run">Run simulation</button>
+              <button type="button" class="btn btn-secondary" id="disk-step">Step seek</button>
+              <button type="button" class="btn btn-ghost" id="disk-reset">Reset</button>
+            </div>
+            <p id="disk-error" class="form-error" role="alert" hidden></p>
+          </form>
+        </article>
+
+        <article class="card">
+          <h3 class="card-title">Compare disk algorithms</h3>
+          <p class="hint">Same queue and head; total seek time compared.</p>
+          <button type="button" class="btn btn-secondary" id="disk-compare-btn">Compare all six</button>
+          <div id="disk-compare-out" class="compare-out" aria-live="polite"></div>
+        </article>
+      </div>
+
+      <article class="card card-wide">
+        <h3 class="card-title">Seek sequence &amp; summary</h3>
+        <p id="disk-visit-order" class="order-line disk-visit-line"></p>
+        <div id="disk-seek-highlight" class="seek-highlight" aria-live="polite" hidden>
+          <span class="seek-highlight-label">Total seek time</span>
+          <span id="disk-total-seek" class="seek-highlight-value"></span>
+          <span id="disk-avg-seek" class="seek-highlight-sub"></span>
+        </div>
+        <p id="disk-total" class="metrics disk-total-fallback" hidden></p>
+        <h4 class="subheading">Step-by-step seeks</h4>
+        <ol id="disk-sequence" class="seek-list"></ol>
+      </article>
+
+      <article class="card card-wide">
+        <h3 class="card-title">Head movement graph</h3>
+        <p class="hint disk-chart-hint">
+          Vertical axis = <strong>cylinder</strong> (track). Horizontal axis = <strong>visit order</strong> (each step is where the head moves next).
+          <strong>Solid</strong> lines are real seeks; <strong>dashed</strong> lines are instant jumps (C-SCAN / C-LOOK — not counted in total seek).
+        </p>
+        <div class="canvas-wrap disk-chart-wrap">
+          <canvas id="disk-canvas" width="900" height="400" aria-label="Disk head movement: cylinder versus visit step"></canvas>
+        </div>
+        <p class="canvas-caption" id="disk-chart-caption" aria-live="polite"></p>
+      </article>
+
+      <div class="btn-row footer-actions">
+        <button type="button" class="btn btn-ghost" id="disk-save">Save simulation</button>
+        <button type="button" class="btn btn-ghost" id="disk-load">Load saved</button>
+        <button type="button" class="btn btn-ghost" id="disk-export-print">Print / Save as PDF</button>
+      </div>
+    </section>
+
+    <!-- Banker's Algorithm -->
+    <section id="panel-banker" class="panel" role="tabpanel" aria-labelledby="tab-banker" tabindex="0" hidden>
+      <div class="panel-intro">
+        <h2>Banker’s algorithm (safety &amp; deadlock avoidance)</h2>
+        <p>
+          Enter <strong>Allocation</strong>, <strong>Max</strong>, and <strong>Available</strong>. The tool checks whether the state is
+          <strong>safe</strong> (some order exists where all processes can finish) or <strong>unsafe</strong> (no such order — deadlock is possible in the worst case).
+          This is a <em>static</em> safety check, not proof that the system is deadlocked <em>right now</em>.
+        </p>
+      </div>
+
+      <div class="grid-2">
+        <article class="card">
+          <h3 class="card-title">
+            <span class="card-icon" aria-hidden="true">◇</span>
+            Matrix size
+          </h3>
+          <form id="form-banker-size" class="form" novalidate>
+            <label class="field">
+              <span class="label-text">Processes (2–8)</span>
+              <input type="number" id="bank-n" min="2" max="8" value="5" inputmode="numeric" autocomplete="off" />
+            </label>
+            <label class="field">
+              <span class="label-text">Resource types (1–6)</span>
+              <input type="number" id="bank-m" min="1" max="6" value="3" inputmode="numeric" autocomplete="off" />
+            </label>
+            <button type="submit" class="btn btn-secondary" id="bank-apply-size">Apply size (rebuild grid)</button>
+          </form>
+          <p class="hint">After changing size, fill matrices. Classic 5×3 example loads below.</p>
+          <button type="button" class="btn btn-ghost" id="bank-load-example">Load classic 5×3 example</button>
+        </article>
+
+        <article class="card">
+          <h3 class="card-title">Test a resource request (optional)</h3>
+          <p class="hint">If this request were granted immediately, would the <em>resulting</em> state stay safe?</p>
+          <form id="form-banker-request" class="form" novalidate>
+            <label class="field">
+              <span class="label-text">Process index (0 … n−1)</span>
+              <input type="number" id="bank-req-p" min="0" max="7" value="1" inputmode="numeric" autocomplete="off" />
+            </label>
+            <label class="field">
+              <span class="label-text">Request vector (comma-separated, length = resource types)</span>
+              <input type="text" id="bank-req-vec" value="1,0,2" maxlength="80" spellcheck="false" autocomplete="off" />
+            </label>
+            <button type="submit" class="btn btn-primary" id="bank-test-request">Test request</button>
+          </form>
+        </article>
+      </div>
+
+      <article class="card card-wide">
+        <h3 class="card-title">Data entry</h3>
+        <p id="banker-error" class="form-error" role="alert" hidden></p>
+        <div id="banker-matrix-wrap" class="banker-matrix-wrap" aria-live="polite"></div>
+        <div class="btn-row">
+          <button type="button" class="btn btn-primary" id="bank-run">Run safety check</button>
+          <button type="button" class="btn btn-secondary" id="bank-step">Next step</button>
+          <button type="button" class="btn btn-ghost" id="bank-reset">Reset view</button>
+        </div>
+        <p id="bank-step-hint" class="hint" hidden>Step mode: use Next step to walk through the safety algorithm.</p>
+      </article>
+
+      <article class="card card-wide">
+        <h3 class="card-title">Result</h3>
+        <div id="banker-banner" class="banker-banner" hidden></div>
+        <div id="banker-need-wrap" class="table-scroll">
+          <h4 class="subheading">Need matrix (Max − Allocation)</h4>
+          <table class="data-table" id="banker-need-table">
+            <thead id="banker-need-head"></thead>
+            <tbody id="banker-need-body"></tbody>
+          </table>
+        </div>
+        <div id="banker-runtime" class="banker-runtime" aria-live="polite"></div>
+        <h4 class="subheading">Algorithm trace</h4>
+        <ol id="banker-trace" class="banker-trace"></ol>
+      </article>
+    </section>
+  </main>
+
+  <footer class="app-footer" role="contentinfo">
+    <p>DCPS Scheduling Simulator — CPU, disk scheduling &amp; Banker’s algorithm. Static, offline-capable; no data leaves your browser.</p>
+  </footer>
+
+  <div id="print-root" class="print-root" aria-hidden="true"></div>
+
+  <script src="script.js" defer></script>
+</body>
+</html>
