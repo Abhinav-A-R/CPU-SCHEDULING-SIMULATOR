@@ -12,7 +12,7 @@ A modern web-based simulator to visualize **CPU Scheduling, Disk Scheduling, and
 ---
 
 ## 📘 Description
-DCPS Scheduling Simulator is an interactive frontend web application built using HTML, CSS, and JavaScript. It helps students understand Operating System concepts through **visual simulations, dynamic charts, and performance analysis**.
+CPU Scheduling Simulator is an interactive frontend web application built using HTML, CSS, and JavaScript. It helps students understand Operating System concepts through **visual simulations, dynamic charts, and performance analysis**.
 
 ---
 
