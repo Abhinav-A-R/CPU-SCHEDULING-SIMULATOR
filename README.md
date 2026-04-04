@@ -33,7 +33,9 @@ CPU Scheduling Simulator is an interactive frontend web application built using 
 - Deadlock avoidance simulation
 - Safe and unsafe state detection
 - Resource allocation visualization
-**### Page_Replacement**
+
+
+# Page_Replacement**
 📄 Supports multiple page replacement algorithms:
 FIFO (First In First Out)
 LRU (Least Recently Used)
