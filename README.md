@@ -35,24 +35,33 @@ CPU Scheduling Simulator is an interactive frontend web application built using 
 - Resource allocation visualization
 
 
-### Page_Replacement**
-📄 Supports multiple page replacement algorithms:
- #####FIFO (First In First Out)
-#####LRU (Least Recently Used)
-#####Optimal
-⚡ Real-time simulation of page replacement process
-📊 Displays:
-Page hits
-Page faults
-Hit ratio
-🧠 Step-by-step visualization of frame allocation
-🖥️ Simple and user-friendly interface
-🔢 Custom input:
-Number of frames
-Page reference string
-📈 Comparison between different algorithms
-🔄 Dynamic updates without page reload (JavaScript based)
-🎯 Educational tool for understanding OS concepts
+### 📄 Page Replacement
+
+- 📄 Supports multiple page replacement algorithms:
+  - **FIFO (First In First Out)**
+  - **LRU (Least Recently Used)**
+  - **Optimal**
+
+- ⚡ Real-time simulation of page replacement process
+
+- 📊 Displays:
+  - Page hits
+  - Page faults
+  - Hit ratio
+
+- 🧠 Step-by-step visualization of frame allocation
+
+- 🖥️ Simple and user-friendly interface
+
+- 🔢 Custom input:
+  - Number of frames
+  - Page reference string
+
+- 📈 Comparison between different algorithms
+
+- 🔄 Dynamic updates without page reload (JavaScript based)
+
+- 🎯 Educational tool for understanding OS concepts
 
 ### 📊 Visualization & Metrics
 - Animated Gantt Charts
