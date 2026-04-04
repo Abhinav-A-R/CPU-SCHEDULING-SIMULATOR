@@ -865,6 +865,34 @@ select:focus {
   padding-left: 0.65rem;
   margin-left: -0.25rem;
 }
+/* ================= PAGE REPLACEMENT ================= */
+
+.page-table {
+  margin-top: 1rem;
+}
+
+.page-replaced {
+  background-color: rgba(220, 38, 38, 0.2);
+  font-weight: bold;
+}
+
+.page-hit-frame {
+  background-color: rgba(5, 150, 105, 0.2);
+  font-weight: bold;
+}
+
+#page-table-wrap {
+  margin-top: 1rem;
+  overflow-x: auto;
+}
+
+#page-table-wrap p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+.page-table th {
+  background: var(--accent-soft);
+}
 
 @media (max-width: 600px) {
   .tabs {

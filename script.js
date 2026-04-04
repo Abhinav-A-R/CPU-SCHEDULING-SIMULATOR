@@ -1239,23 +1239,51 @@ function toggleTheme() {
   applyTheme(cur === 'dark' ? 'light' : 'dark');
 }
 
-function switchTab(name) {
-  const isCpu = name === 'cpu';
-  const isDisk = name === 'disk';
-  const isBank = name === 'banker';
-  els.panelCpu.hidden = !isCpu;
-  els.panelDisk.hidden = !isDisk;
-  els.panelBanker.hidden = !isBank;
-  els.panelCpu.classList.toggle('active', isCpu);
-  els.panelDisk.classList.toggle('active', isDisk);
-  els.panelBanker.classList.toggle('active', isBank);
-  els.tabCpu.classList.toggle('active', isCpu);
-  els.tabDisk.classList.toggle('active', isDisk);
-  els.tabBanker.classList.toggle('active', isBank);
-  els.tabCpu.setAttribute('aria-selected', String(isCpu));
-  els.tabDisk.setAttribute('aria-selected', String(isDisk));
-  els.tabBanker.setAttribute('aria-selected', String(isBank));
+// ==================== TAB SWITCHING (generic, data‑driven) ====================
+function switchTab(tabName) {
+  // Hide all panels
+  document.querySelectorAll('.panel').forEach(panel => {
+    panel.classList.remove('active');
+    panel.hidden = true;
+  });
+
+  // Deactivate all tabs
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.classList.remove('active');
+    tab.setAttribute('aria-selected', 'false');
+  });
+
+  // Show the selected panel
+  const activePanel = document.getElementById(`panel-${tabName}`);
+  if (activePanel) {
+    activePanel.classList.add('active');
+    activePanel.hidden = false;
+  }
+
+  // Activate the clicked tab
+  const activeTab = document.querySelector(`.tab[data-tab="${tabName}"]`);
+  if (activeTab) {
+    activeTab.classList.add('active');
+    activeTab.setAttribute('aria-selected', 'true');
+  }
 }
+
+// Attach event listeners to all tabs (dynamic, works for cpu, disk, banker, page, etc.)
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const target = tab.dataset.tab;
+    if (target) switchTab(target);
+  });
+});
+
+// Initialise the default tab (e.g., CPU)
+switchTab('cpu');
+
+// ---------------------------------------------------------------------------
+// Rest of the existing event listeners (CPU, Disk, Banker, etc.)
+// Note: The old tab listener code (els.tabCpu, els.tabDisk, els.tabBanker) has been removed.
+// All other functionality remains unchanged.
+// ---------------------------------------------------------------------------
 
 /** @param {string} algo */
 function cpuAlgoNeedsPriority(algo) {
@@ -2105,10 +2133,10 @@ initTheme();
 buildCpuProcessInputs(parseInt(els.cpuN.value, 10) || 3);
 buildBankerMatrix(5, 3, BANKER_EXAMPLE_5x3);
 
+// Theme button
 els.btnTheme.addEventListener('click', toggleTheme);
-els.tabCpu.addEventListener('click', () => switchTab('cpu'));
-els.tabDisk.addEventListener('click', () => switchTab('disk'));
-els.tabBanker.addEventListener('click', () => switchTab('banker'));
+
+// All other event listeners (CPU, Disk, Banker) remain exactly as before
 els.cpuAlgo.addEventListener('change', syncCpuFormUi);
 document.querySelectorAll('input[name="cpu-compare"]').forEach((el) => {
   el.addEventListener('change', syncCpuFormUi);
@@ -2151,7 +2179,6 @@ window.addEventListener('resize', () => {
   }
 });
 
-// Optional: block middle-click paste of huge strings into disk queue (soft limit)
 els.diskQueue.addEventListener('input', () => {
   if (els.diskQueue.value.length > LIMITS.maxQueueStringLen) {
     els.diskQueue.value = els.diskQueue.value.slice(0, LIMITS.maxQueueStringLen);

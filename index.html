@@ -32,6 +32,11 @@
     <button type="button" id="tab-cpu" class="tab active" role="tab" aria-selected="true" aria-controls="panel-cpu" data-tab="cpu">CPU Scheduling</button>
     <button type="button" id="tab-disk" class="tab" role="tab" aria-selected="false" aria-controls="panel-disk" data-tab="disk">Disk Scheduling</button>
     <button type="button" id="tab-banker" class="tab" role="tab" aria-selected="false" aria-controls="panel-banker" data-tab="banker">Banker’s Algorithm</button>
+    <button type="button" id="tab-page" class="tab" 
+  role="tab" aria-selected="false" 
+  aria-controls="panel-page" data-tab="page">
+  Page Replacement
+</button>
   </nav>
 
   <main id="main-content" class="main">
@@ -321,6 +326,71 @@
         <ol id="banker-trace" class="banker-trace"></ol>
       </article>
     </section>
+    <!-- Page Replacement -->
+<section id="panel-page" class="panel" hidden>
+  <div class="panel-intro">
+    <h2>Page Replacement</h2>
+    <p>Simulate FIFO, LRU and Optimal page replacement algorithms.</p>
+  </div>
+
+  <div class="grid-2">
+    
+    <!-- Configuration -->
+    <article class="card">
+      <h3 class="card-title">Configuration</h3>
+
+      <form id="form-page" class="form">
+        
+        <label class="field">
+          <span class="label-text">Algorithm</span>
+          <select id="page-algo">
+            <option value="fcfs">FIFO</option>
+            <option value="lru">LRU</option>
+            <option value="optimal">Optimal</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span class="label-text">Frames</span>
+          <input type="number" id="page-frames" value="3" />
+        </label>
+
+        <label class="field">
+          <span class="label-text">Page Reference String</span>
+          <input type="text" id="page-queue" placeholder="e.g. 7,0,1,2,0,3,0,4" />
+        </label>
+
+        <div class="btn-row">
+          <button type="submit" class="btn btn-primary">Run</button>
+          <button type="button" id="page-reset" class="btn btn-ghost">Reset</button>
+        </div>
+
+        <p id="page-error" class="form-error"></p>
+      </form>
+    </article>
+
+    <!-- Results -->
+    <article class="card">
+      <h3 class="card-title">Results</h3>
+
+      <div class="metrics metrics-stack">
+        <p>Faults: <span id="page-faults-out">-</span></p>
+        <p>Hits: <span id="page-hits-out">-</span></p>
+        <p>Hit Ratio: <span id="page-hit-ratio">-</span></p>
+      </div>
+    </article>
+
+  </div>
+
+  <!-- Table -->
+  <article class="card card-wide">
+    <h3 class="card-title">Memory Trace</h3>
+    <div id="page-table-wrap"></div>
+  </article>
+
+</section>
+<!--end of page replacement section-->
+
   </main>
 
   <footer class="app-footer" role="contentinfo">
@@ -330,5 +400,6 @@
   <div id="print-root" class="print-root" aria-hidden="true"></div>
 
   <script src="script.js" defer></script>
+  <script src="page-replacement.js" defer></script>
 </body>
 </html>
