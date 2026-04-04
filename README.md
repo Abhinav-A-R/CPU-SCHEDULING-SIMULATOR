@@ -7,7 +7,7 @@ A modern web-based simulator to visualize **CPU Scheduling, Disk Scheduling, and
 ---
 
 ## 🌐 LIVE WEB FOR FREE
-🔗 https://abhinav-a-r.github.io/CPU-SCHEDULING-SIMULATOR/
+🔗 https://abhinav-a-r.github.io/cpu-scheduling-simulator/
 
 ---
 
